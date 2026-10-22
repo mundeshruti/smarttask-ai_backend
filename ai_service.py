@@ -1,9 +1,9 @@
 import re
 
-
 def improve_task_description(title: str, notes: str = "") -> str:
     """
     Improve a task description locally using rule-based logic.
+    Returns a natural description without extra headings.
     No external API or language model is required.
     """
 
@@ -15,49 +15,63 @@ def improve_task_description(title: str, notes: str = "") -> str:
 
     normalized_title = title.lower()
 
-    # Task keywords and their corresponding objective templates.
     task_rules = [
         (
             r"^(create|build|develop|implement)\b\s*",
-            lambda match, text: f"Create and implement {text[match.end():].strip() or text}."
+            lambda match, text: (
+                f"Create and implement "
+                f"{text[match.end():].strip() or text}."
+            ),
         ),
         (
             r"^(fix|resolve|debug)\b\s*",
-            lambda match, text: f"Investigate and resolve: {text}."
+            lambda match, text: f"Investigate and resolve: {text}.",
         ),
         (
             r"^(test|testing|validate)\b\s*",
-            lambda match, text: f"Test and validate {text[match.end():].strip() or text}."
+            lambda match, text: (
+                f"Test and validate "
+                f"{text[match.end():].strip() or text}."
+            ),
         ),
         (
             r"^(update|improve|enhance|optimize)\b\s*",
-            lambda match, text: f"Improve and refine {text[match.end():].strip() or text}."
+            lambda match, text: (
+                f"Improve and refine "
+                f"{text[match.end():].strip() or text}."
+            ),
         ),
         (
             r"^(study|learn|research|explore)\b\s*",
-            lambda match, text: f"Study and understand {text[match.end():].strip() or text}."
+            lambda match, text: (
+                f"Study and understand "
+                f"{text[match.end():].strip() or text}."
+            ),
         ),
         (
             r"^(integrate|integration)\b\s*",
-            lambda match, text: f"Integrate {text[match.end():].strip() or text}."
+            lambda match, text: (
+                f"Integrate "
+                f"{text[match.end():].strip() or text}."
+            ),
         ),
     ]
 
-    objective = None
+    description = None
 
     for pattern, formatter in task_rules:
         match = re.match(pattern, normalized_title, flags=re.IGNORECASE)
         if match:
-            objective = formatter(match, title)
+            description = formatter(match, title)
             break
 
-    if objective is None:
-        objective = f"Complete the task: {title}."
+    if description is None:
+        description = title
+        if not description.endswith((".", "!", "?")):
+            description += "."
 
-    # Build a concise description without unnecessary generic requirements.
-    description = f"Objective:\n{objective}"
-
-    if notes:
-        description += f"\n\nAdditional Details:\n{notes}"
+    # Include notes naturally, without adding a heading.
+    if notes and notes.lower() not in description.lower():
+        description = f"{description.rstrip('.')} — {notes}"
 
     return description
